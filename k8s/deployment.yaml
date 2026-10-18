@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: michaels-cal
+  namespace: michaels-cal
+  labels:
+    app: michaels-cal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: michaels-cal
+  template:
+    metadata:
+      labels:
+        app: michaels-cal
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      # imagePullSecrets:   # needed if the ghcr package is private
+      #   - name: ghcr
+      containers:
+        - name: michaels-cal
+          image: ghcr.io/OWNER/michaels-cal:latest # change me
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: michaels-cal
+            - secretRef:
+                name: michaels-cal
+          readinessProbe:
+            httpGet:
+              path: /michaels-cal.ics # ready once the first refresh succeeded
+              port: http
+            periodSeconds: 15
+            failureThreshold: 20
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: out
+              mountPath: /app/out
+            - name: www
+              mountPath: /srv/www
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: out
+          emptyDir: {}
+        - name: www
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
