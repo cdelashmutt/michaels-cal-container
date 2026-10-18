@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: michaels-cal
-  namespace: michaels-cal
-data:
-  MICHAELS_ADDRESS: "Michaels, 45045 Worth Ave, California, MD 20619, USA"
-  TZ: "America/New_York"
-  REFRESH_INTERVAL: "21600" # seconds between calendar refreshes
